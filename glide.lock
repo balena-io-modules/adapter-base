@@ -1,0 +1,77 @@
+hash: e2542218d95d9ebc27c4312fc9344baf70d2dcf80e59094a50040ff04d8f8517
+updated: 2017-08-03T11:38:38.292785435+01:00
+imports:
+- name: github.com/golang/protobuf
+  version: 748d386b5c1ea99658fd69fe9f03991ce86a90c1
+  subpackages:
+  - jsonpb
+  - proto
+  - protoc-gen-go/descriptor
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/struct
+  - ptypes/timestamp
+- name: github.com/grpc-ecosystem/grpc-gateway
+  version: f2862b476edcef83412c7af8687c9cd8e4097c0f
+  subpackages:
+  - runtime
+  - runtime/internal
+  - utilities
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/satori/go.uuid
+  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
+- name: github.com/sirupsen/logrus
+  version: 181d419aa9e2223811b824e8f0b4af96f9ba9302
+- name: github.com/spf13/cobra
+  version: b4dbd37a01839e0653eec12aa4bbb2a2ce7b2a37
+- name: github.com/spf13/pflag
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: golang.org/x/crypto
+  version: 850760c427c516be930bc91280636328f1a62286
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/net
+  version: f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/sys
+  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: 3bd178b88a8180be2df394a1fbb81313916f0e7b
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/genproto
+  version: 09f6ed296fc66555a25fe4ce95173148778dfa85
+  subpackages:
+  - googleapis/api/annotations
+  - googleapis/rpc/status
+- name: google.golang.org/grpc
+  version: b463cc3276f7d8a556664a893915d0f49d449a4d
+  subpackages:
+  - codes
+  - credentials
+  - grpclb/grpc_lb_v1
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - stats
+  - status
+  - tap
+  - transport
+testImports: []

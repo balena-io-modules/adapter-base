@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package update;
+
+import "google/api/annotations.proto";
+
+service Update {
+  rpc Start (StartRequest) returns (StartResponse) {
+    option (google.api.http) = {
+      post: "/update"
+      body: "*"
+    };
+  }
+  rpc Status (StatusRequest) returns (StatusResponse) {
+    option (google.api.http) = {
+      get: "/update/{id}"
+    };
+  }
+  rpc Cancel (StatusRequest) returns (StatusResponse) {
+    option (google.api.http) = {
+      delete: "/update/{id}"
+    };
+  }
+}
+
+message StartRequest {
+  string address = 1;
+  string payload = 2;
+  int64 timeout = 3;
+}
+
+message StartResponse {
+  string id = 1;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  enum State {
+    CREATED = 0;
+    QUEUED = 1;
+    STARTED = 2;
+    EXTRACTING = 3;
+    CONNECTING = 4;
+    FLASHING = 5;
+    VALIDATING = 6;
+    COMPLETED = 7;
+    CANCELLED = 8;
+    EXTRACT_FAILURE = 9;
+    CONNECT_FAILURE = 10;
+    FLASH_FAILURE = 11;
+    VALIDATE_FAILURE = 12;
+  }
+  string id = 1;
+  StartRequest startRequest = 2;
+  State state = 3;
+  int32 progress = 4;
+  string message = 5;
+  int64 started = 6;
+  int64 completed = 7;
+  int64 duration = 8;
+}

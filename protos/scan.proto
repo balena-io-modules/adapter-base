@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package scan;
+
+import "google/api/annotations.proto";
+
+service Scan {
+  rpc Start (StartRequest) returns (StartResponse) {
+    option (google.api.http) = {
+      post: "/scan"
+      body: "*"
+    };
+  }
+  rpc Status (StatusRequest) returns (StatusResponse) {
+    option (google.api.http) = {
+      get: "/scan/{id}"
+    };
+  }
+  rpc Cancel (StatusRequest) returns (StatusResponse) {
+    option (google.api.http) = {
+      delete: "/scan/{id}"
+    };
+  }
+}
+
+message StartRequest {
+  string name = 1;
+  int64 timeout = 2;
+}
+
+message StartResponse {
+  string id = 1;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  enum State {
+    STARTED = 0;
+    COMPLETED = 1;
+    CANCELLED = 2;
+    SCAN_FALURE = 3;
+  }
+  message Result {
+    string address = 1;
+    string name = 2;
+  }
+  string id = 1;
+  StartRequest startRequest = 2;
+  State state = 3;
+  repeated Result results = 4;
+  string message = 5;
+  int64 started = 6;
+  int64 completed = 7;
+  int64 duration = 8;
+}
+
+
