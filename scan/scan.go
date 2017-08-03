@@ -1,9 +1,12 @@
 package scan
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
+	"github.com/currantlabs/ble"
+	"github.com/pkg/errors"
+	"github.com/resin-io/adapter-base/bluetooth"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -135,22 +138,45 @@ func (s *Server) scan(req *StartRequest, id string, worker *Worker) {
 			}
 		}(worker, sync, resp)
 
-		// Start of scanning code
-		// This is just an example which simulates finding one device per second
-		for i := 0; i < 100; i++ {
-			select {
-			case <-worker.ctx.Done():
-				return
-			case <-time.After(time.Second * 1):
-				result := &StatusResponse_Result{
-					Address: fmt.Sprintf("address: %d", i),
-					Name:    fmt.Sprintf("name: %d", i),
+		advChannel := make(chan ble.Advertisement)
+
+		go func(worker *Worker, sync chan StatusResponse, resp StatusResponse, advChannel chan ble.Advertisement) {
+			for {
+				select {
+				case <-worker.ctx.Done():
+					return
+				case adv := <-advChannel:
+					if resp.StartRequest.Name != "" && !strings.EqualFold(adv.LocalName(), resp.StartRequest.Name) {
+						break
+					}
+
+					result := &StatusResponse_Result{
+						Address: adv.Address().String(),
+						Name:    adv.LocalName(),
+					}
+					resp.Results = append(resp.Results, result)
+				default:
 				}
-				resp.Results = append(resp.Results, result)
+
 				sync <- resp
 			}
+		}(worker, sync, resp, advChannel)
+
+		if err := bluetooth.OpenDevice(); err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Error opening device")
+			return
 		}
-		// End of scanning code
+		defer bluetooth.CloseDevice()
+
+		err := ble.Scan(worker.ctx, false, func(adv ble.Advertisement) { advChannel <- adv }, nil)
+		if errors.Cause(err) != context.DeadlineExceeded && errors.Cause(err) != context.Canceled {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Scanning error")
+			return
+		}
 	}(req, id, worker)
 }
 

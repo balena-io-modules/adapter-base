@@ -27,6 +27,7 @@ message StartRequest {
   string address = 1;
   string payload = 2;
   int64 timeout = 3;
+  string device = 4;
 }
 
 message StartResponse {
