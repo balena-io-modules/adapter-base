@@ -1,7 +1,6 @@
 package scan
 
 import (
-	"fmt"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -124,6 +123,11 @@ func (s *Server) scan(req *StartRequest, id string, worker *Worker) {
 				select {
 				case resp = <-sync:
 				case <-worker.input:
+					if resp.Completed != 0 {
+						resp.Duration = resp.Completed - resp.Started
+					} else {
+						resp.Duration = time.Now().UTC().Unix() - resp.Started
+					}
 					worker.output <- resp
 					select {
 					case <-worker.ctx.Done():
@@ -135,22 +139,10 @@ func (s *Server) scan(req *StartRequest, id string, worker *Worker) {
 			}
 		}(worker, sync, resp)
 
-		// Start of scanning code
-		// This is just an example which simulates finding one device per second
-		for i := 0; i < 100; i++ {
-			select {
-			case <-worker.ctx.Done():
-				return
-			case <-time.After(time.Second * 1):
-				result := &StatusResponse_Result{
-					Address: fmt.Sprintf("address: %d", i),
-					Name:    fmt.Sprintf("name: %d", i),
-				}
-				resp.Results = append(resp.Results, result)
-				sync <- resp
-			}
-		}
-		// End of scanning code
+		// This function is implemented inside lib.go
+		// Each dependent device will have a different scan function
+		scan(worker, sync, resp)
+
 	}(req, id, worker)
 }
 
