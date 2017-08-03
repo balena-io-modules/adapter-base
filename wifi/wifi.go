@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os/exec"
 
 	log "github.com/Sirupsen/logrus"
@@ -23,38 +24,20 @@ type Host struct {
 	Mac  string
 }
 
-// 	return false, nil
-// }
+func PostForm(url, filePath string) error {
+	req := gorequest.New()
+	req.Post(url)
+	req.Type("multipart")
+	req.SendFile(filePath, "firmware.bin", "image")
 
-// func GetIP(id string) (string, error) {
-// 	hosts, err := scan()
-// 	if err != nil {
-// 		return "", err
-// 	}
+	log.WithFields(log.Fields{
+		"URL":    req.Url,
+		"Method": req.Method,
+	}).Info("Posting form")
 
-// 	for _, host := range hosts {
-// 		if host.mac == id {
-// 			return host.ip, nil
-// 		}
-// 	}
-
-// 	return "", fmt.Errorf("Device offline")
-// }
-
-// func PostForm(url, filePath string) error {
-// 	req := gorequest.New()
-// 	req.Post(url)
-// 	req.Type("multipart")
-// 	req.SendFile(filePath, "firmware.bin", "image")
-
-// 	log.WithFields(log.Fields{
-// 		"URL":    req.Url,
-// 		"Method": req.Method,
-// 	}).Info("Posting form")
-
-// 	resp, _, errs := req.End()
-// 	return handleResp(resp, errs, http.StatusOK)
-// }
+	resp, _, errs := req.End()
+	return handleResp(resp, errs, http.StatusOK)
+}
 
 func Scan(ctx context.Context) ([]Host, error) {
 	cmd := exec.CommandContext(ctx, "bash", "-c", fmt.Sprintf("nmap -sP %s -oX /tmp/scan.txt", SCAN_RANGE))

@@ -25,7 +25,7 @@ func scan(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
 	}
 
 	for _, host := range hosts {
-		if resp.StartRequest.Name != "" && !strings.EqualFold(host.Name, resp.StartRequest.Name) {
+		if resp.StartRequest.Address != "" && !strings.EqualFold(host.Mac, resp.StartRequest.Address) {
 			break
 		}
 

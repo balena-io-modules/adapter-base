@@ -53,6 +53,8 @@ message StatusResponse {
     FLASH_FAILURE = 11;
     VALIDATE_FAILURE = 12;
     TIMED_OUT = 13;
+    SCAN_FALURE = 14;
+    OFFLINE = 15;
   }
   string id = 1;
   StartRequest startRequest = 2;

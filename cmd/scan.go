@@ -44,7 +44,7 @@ func init() {
 	ScanCmd.AddCommand(CancelScanCmd)
 
 	ScanCmd.PersistentFlags().IntVarP(&port, "port", "p", 8081, "API port")
-	StartScanCmd.Flags().StringVarP(&name, "name", "n", "", "name")
+	StartScanCmd.Flags().StringVarP(&address, "address", "a", "", "address")
 	StartScanCmd.Flags().Int64VarP(&timeout, "timeout", "t", 120, "timeout")
 }
 
@@ -56,7 +56,7 @@ func startScanCmd(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 
 	client := scan.NewScanClient(conn)
-	resp, err := client.Start(context.Background(), &scan.StartRequest{Name: name, Timeout: timeout})
+	resp, err := client.Start(context.Background(), &scan.StartRequest{Address: address, Timeout: timeout})
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
