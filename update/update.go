@@ -1,7 +1,6 @@
 package update
 
 import (
-	"fmt"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -135,20 +134,10 @@ func (s *Server) update(req *StartRequest, id string, worker *Worker) {
 			}
 		}(worker, sync, resp)
 
-		// Start of updating code
-		// This is just an example which simulates increasing the progress percentage by one per second
-		for i := 0; i < 100; i++ {
-			select {
-			case <-worker.ctx.Done():
-				return
-			case <-time.After(time.Second * 1):
-				resp.State = StatusResponse_FLASHING
-				resp.Progress = int32(i)
-				resp.Message = fmt.Sprintf("message: %d", i)
-				sync <- resp
-			}
-		}
-		// End of updating code
+		// This function is implemented inside lib.go
+		// Each dependent device will have a different scan function
+		update(worker, sync, resp)
+
 	}(req, id, worker)
 }
 
