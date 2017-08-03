@@ -42,6 +42,7 @@ message StatusResponse {
     COMPLETED = 1;
     CANCELLED = 2;
     SCAN_FALURE = 3;
+    TIMED_OUT = 4;
   }
   message Result {
     string address = 1;

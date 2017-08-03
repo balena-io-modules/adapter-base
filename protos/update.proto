@@ -52,6 +52,7 @@ message StatusResponse {
     CONNECT_FAILURE = 10;
     FLASH_FAILURE = 11;
     VALIDATE_FAILURE = 12;
+    TIMED_OUT = 13;
   }
   string id = 1;
   StartRequest startRequest = 2;
