@@ -1,23 +1,41 @@
 package scan
 
 import (
-	"fmt"
+	"context"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/resin-io/adapter-base/wifi"
 )
 
 func scan(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
-	// This is just an example which simulates finding one device per second
-	for i := 0; i < 100; i++ {
-		select {
-		case <-worker.ctx.Done():
-			return
-		case <-time.After(time.Second * 1):
-			result := &StatusResponse_Result{
-				Address: fmt.Sprintf("address: %d", i),
-				Name:    fmt.Sprintf("name: %d", i),
-			}
-			resp.Results = append(resp.Results, result)
-			sync <- resp
+	hosts, err := wifi.Scan(worker.ctx)
+	if err != nil {
+		if errors.Cause(err) == context.DeadlineExceeded {
+			resp.State = StatusResponse_TIMED_OUT
+		} else if errors.Cause(err) == context.Canceled {
+			resp.State = StatusResponse_CANCELLED
+		} else {
+			resp.Message = err.Error()
+			resp.State = StatusResponse_SCAN_FALURE
 		}
+		sync <- resp
+		return
+	}
+
+	for _, host := range hosts {
+		if resp.StartRequest.Name != "" && !strings.EqualFold(host.Name, resp.StartRequest.Name) {
+			break
+		}
+
+		result := &StatusResponse_Result{
+			Address: host.Mac,
+			Name:    host.Name,
+		}
+		resp.Results = append(resp.Results, result)
+		resp.State = StatusResponse_COMPLETED
+		resp.Completed = time.Now().UTC().Unix()
+		sync <- resp
 	}
 }
