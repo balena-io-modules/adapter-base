@@ -11,7 +11,7 @@ import (
 var verbose bool
 var apiPort, rpcPort, port, concurrency int
 var timeout int64
-var address string
+var application, mac string
 
 func validateArgs(args []string, required int) error {
 	if len(args) != required {

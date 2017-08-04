@@ -14,14 +14,14 @@ import (
 
 // TODO: these should be configurable
 const (
-	GATEWAY_IP = "192.168.1.112"
-	SCAN_RANGE = "192.168.1.*"
+	GATEWAY_IP = "10.0.40.73"
+	SCAN_RANGE = "10.0.40.*"
 )
 
 type Host struct {
-	Name string
-	Ip   string
-	Mac  string
+	Application string
+	Ip          string
+	Mac         string
 }
 
 func PostForm(url, filePath string) error {
@@ -76,15 +76,9 @@ func Scan(ctx context.Context) ([]Host, error) {
 		url := "http://" + h.Ip + "/id"
 		resp, body, errs := gorequest.New().Get(url).End()
 		if err := handleResp(resp, errs, 200); err != nil {
-			log.WithFields(log.Fields{
-				"Error": err,
-				"URL":   url,
-				"IP":    h.Ip,
-				"MAC":   h.Mac,
-			}).Warn("Unable to get device ID")
-			continue
+			body = "Not found"
 		}
-		h.Name = body
+		h.Application = body
 
 		hosts = append(hosts, h)
 	}

@@ -18,20 +18,23 @@ func scan(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
 			resp.State = StatusResponse_CANCELLED
 		} else {
 			resp.Message = err.Error()
-			resp.State = StatusResponse_SCAN_FALURE
+			resp.State = StatusResponse_FAILED
 		}
 		sync <- resp
 		return
 	}
 
 	for _, host := range hosts {
-		if resp.StartRequest.Address != "" && !strings.EqualFold(host.Mac, resp.StartRequest.Address) {
-			break
+		if resp.StartRequest.Application != "" && !strings.EqualFold(host.Application, resp.StartRequest.Application) {
+			continue
+		} else if resp.StartRequest.Mac != "" && !strings.EqualFold(host.Mac, resp.StartRequest.Mac) {
+			continue
 		}
 
 		result := &StatusResponse_Result{
-			Address: host.Mac,
-			Name:    host.Name,
+			Application: host.Application,
+			Ip:          host.Ip,
+			Mac:         host.Mac,
 		}
 		resp.Results = append(resp.Results, result)
 		resp.State = StatusResponse_COMPLETED

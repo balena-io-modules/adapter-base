@@ -24,8 +24,9 @@ service Scan {
 }
 
 message StartRequest {
-  string address= 1;
-  int64 timeout = 2;
+  string application = 1;
+  string mac = 2;
+  int64 timeout = 3;
 }
 
 message StartResponse {
@@ -38,15 +39,17 @@ message StatusRequest {
 
 message StatusResponse {
   enum State {
-    STARTED = 0;
-    COMPLETED = 1;
-    CANCELLED = 2;
-    SCAN_FALURE = 3;
-    TIMED_OUT = 4;
+    _ = 0;
+    STARTED = 1;
+    COMPLETED = 2;
+    CANCELLED = 3;
+    FAILED = 4;
+    TIMED_OUT = 5;
   }
   message Result {
-    string address = 1;
-    string name = 2;
+    string application = 1;
+    string mac = 2;
+    string ip = 3;
   }
   string id = 1;
   StartRequest startRequest = 2;

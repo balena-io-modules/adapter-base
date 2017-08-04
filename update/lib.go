@@ -18,7 +18,7 @@ func update(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
 			resp.State = StatusResponse_CANCELLED
 		} else {
 			resp.Message = err.Error()
-			resp.State = StatusResponse_SCAN_FALURE
+			resp.State = StatusResponse_FAILED
 		}
 		sync <- resp
 		return
@@ -34,14 +34,14 @@ func update(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
 
 	if ip == "" {
 		resp.Message = "device is offline"
-		resp.State = StatusResponse_OFFLINE
+		resp.State = StatusResponse_FAILED
 		sync <- resp
 		return
 	}
 
 	if err := wifi.PostForm("http://"+ip+"/update", resp.StartRequest.Payload); err != nil {
 		resp.Message = err.Error()
-		resp.State = StatusResponse_FLASH_FAILURE
+		resp.State = StatusResponse_FAILED
 		sync <- resp
 		return
 	}

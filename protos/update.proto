@@ -39,22 +39,12 @@ message StatusRequest {
 
 message StatusResponse {
   enum State {
-    CREATED = 0;
-    QUEUED = 1;
-    STARTED = 2;
-    EXTRACTING = 3;
-    CONNECTING = 4;
-    FLASHING = 5;
-    VALIDATING = 6;
-    COMPLETED = 7;
-    CANCELLED = 8;
-    EXTRACT_FAILURE = 9;
-    CONNECT_FAILURE = 10;
-    FLASH_FAILURE = 11;
-    VALIDATE_FAILURE = 12;
-    TIMED_OUT = 13;
-    SCAN_FALURE = 14;
-    OFFLINE = 15;
+    _ = 0;
+    STARTED = 1;
+    COMPLETED = 2;
+    CANCELLED = 3;
+    FAILED = 4;
+    TIMED_OUT = 5;
   }
   string id = 1;
   StartRequest startRequest = 2;
