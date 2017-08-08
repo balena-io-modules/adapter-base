@@ -2,21 +2,21 @@ package: github.com/resin-io/adapter-base
 import:
 - package: github.com/golang/protobuf
   subpackages:
-  - proto
+  - ptypes/struct
+  - protoc-gen-go
 - package: github.com/grpc-ecosystem/grpc-gateway
   subpackages:
   - runtime
-  - utilities
+  - protoc-gen-grpc-gateway
+  - protoc-gen-swagger
+- package: github.com/lair-framework/go-nmap
+- package: github.com/parnurzeal/gorequest
 - package: github.com/satori/go.uuid
 - package: github.com/sirupsen/logrus
 - package: github.com/spf13/cobra
 - package: golang.org/x/net
   subpackages:
   - context
-- package: google.golang.org/genproto
-  subpackages:
-  - googleapis/api/annotations
 - package: google.golang.org/grpc
   subpackages:
   - codes
-  - grpclog

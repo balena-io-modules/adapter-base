@@ -1,22 +1,50 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 )
 
 var verbose bool
 var apiPort, rpcPort, port, concurrency int
-var timeout int64
-var application, mac string
+var number, delay, timeout int64
+var application, mac, id string
+var destinations []string
 
-func validateArgs(args []string, required int) error {
-	if len(args) != required {
-		return errors.New("Incorrect arguments")
+func validateArgs(args []string, n int) error {
+	if len(args) != n {
+		return fmt.Errorf("accepts exactly %d arg(s), received %d", n, len(args))
 	}
+
+	return nil
+}
+
+func validateFlags(flags *pflag.FlagSet) error {
+	requiredError := false
+	flagName := ""
+
+	flags.VisitAll(func(flag *pflag.Flag) {
+		requiredAnnotation := flag.Annotations[cobra.BashCompOneRequiredFlag]
+		if len(requiredAnnotation) == 0 {
+			return
+		}
+
+		flagRequired := requiredAnnotation[0] == "true"
+
+		if flagRequired && !flag.Changed {
+			requiredError = true
+			flagName = flag.Name
+		}
+	})
+
+	if requiredError {
+		return fmt.Errorf("required flag \"%s\" has not been set", flagName)
+	}
+
 	return nil
 }
 

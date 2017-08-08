@@ -3,62 +3,66 @@ syntax = "proto3";
 package scan;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 
 service Scan {
-  rpc Start (StartRequest) returns (StartResponse) {
+  rpc Start (Options) returns (Id) {
     option (google.api.http) = {
       post: "/scan"
       body: "*"
     };
   }
-  rpc Status (StatusRequest) returns (StatusResponse) {
+  rpc Status (Id) returns (Jobs) {
     option (google.api.http) = {
       get: "/scan/{id}"
     };
   }
-  rpc Cancel (StatusRequest) returns (StatusResponse) {
+  rpc Cancel (Id) returns (Job) {
     option (google.api.http) = {
       delete: "/scan/{id}"
     };
   }
 }
 
-message StartRequest {
-  string application = 1;
-  string mac = 2;
-  int64 timeout = 3;
+message Options {
+  int64 number = 1;
+  int64 delay = 2;
+  map<string, google.protobuf.Value> extra = 3;
 }
 
-message StartResponse {
+message Id {
   string id = 1;
 }
 
-message StatusRequest {
-  string id = 1;
+enum State {
+  _ = 0;
+  STARTED = 1;
+  COMPLETED = 2;
+  CANCELLED = 3;
+  FAILED = 4;
+  TIMED_OUT = 5;
 }
 
-message StatusResponse {
-  enum State {
-    _ = 0;
-    STARTED = 1;
-    COMPLETED = 2;
-    CANCELLED = 3;
-    FAILED = 4;
-    TIMED_OUT = 5;
-  }
-  message Result {
-    string application = 1;
-    string mac = 2;
-    string ip = 3;
-  }
+message Destination {
   string id = 1;
-  StartRequest startRequest = 2;
+  map<string, google.protobuf.Value> extra = 2;
+}
+
+message Progress {
+  int64 started = 1;
+  int64 completed = 2;
+  int64 duration = 3;
+}
+
+message Job {
+  string id = 1;
+  Options options = 2;
   State state = 3;
-  repeated Result results = 4;
-  string message = 5;
-  int64 started = 6;
-  int64 completed = 7;
-  int64 duration = 8;
+  repeated Destination destinations = 4;
+  Progress progress = 5;
+  string message = 6;
 }
 
-
+message Jobs {
+  repeated Job jobs = 1;
+}

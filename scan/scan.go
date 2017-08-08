@@ -11,8 +11,8 @@ import (
 )
 
 type Worker struct {
-	input  chan *StatusRequest
-	output chan StatusResponse
+	input  chan *Id
+	output chan Job
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -31,18 +31,10 @@ func NewServer(concurrency int, verbose bool) *Server {
 	return server
 }
 
-func (s *Server) Start(ctx context.Context, req *StartRequest) (*StartResponse, error) {
+func (s *Server) Start(ctx context.Context, req *Options) (*Id, error) {
 	log.WithFields(log.Fields{
 		"request": req,
-	}).Debug("Start request received")
-
-	if req.Timeout == 0 {
-		err := grpc.Errorf(codes.InvalidArgument, "must specify timeout")
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Start request error")
-		return nil, err
-	}
+	}).Debug("Start request")
 
 	if len(s.workers) >= s.concurrency {
 		err := grpc.Errorf(codes.ResourceExhausted, "no workers available")
@@ -52,11 +44,17 @@ func (s *Server) Start(ctx context.Context, req *StartRequest) (*StartResponse, 
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	if value, ok := req.Extra["timeout"]; ok {
+		if timeout := value.GetNumberValue(); timeout != 0 {
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(int64(timeout))*time.Second)
+		}
+	}
+
 	id := uuid.NewV4().String()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.Timeout)*time.Second)
 	worker := &Worker{
-		input:  make(chan *StatusRequest),
-		output: make(chan StatusResponse),
+		input:  make(chan *Id),
+		output: make(chan Job),
 		ctx:    ctx,
 		cancel: cancel,
 	}
@@ -64,28 +62,37 @@ func (s *Server) Start(ctx context.Context, req *StartRequest) (*StartResponse, 
 
 	s.scan(req, id, worker)
 
-	return &StartResponse{Id: id}, nil
+	return &Id{Id: id}, nil
 }
 
-func (s *Server) Status(ctx context.Context, req *StatusRequest) (*StatusResponse, error) {
+func (s *Server) Status(ctx context.Context, req *Id) (*Jobs, error) {
 	log.WithFields(log.Fields{
 		"request": req,
 	}).Debug("Status request")
 
-	worker, err := s.findWorker(req)
-	if err != nil {
-		return nil, err
+	resp := &Jobs{}
+	if req.Id == "" {
+		for _, worker := range s.workers {
+			worker.input <- req
+			r := <-worker.output
+			s.cleanup(worker, req)
+			resp.Jobs = append(resp.Jobs, &r)
+		}
+	} else {
+		if worker, err := s.findWorker(req); err != nil {
+			return nil, err
+		} else {
+			worker.input <- req
+			r := <-worker.output
+			s.cleanup(worker, req)
+			resp.Jobs = append(resp.Jobs, &r)
+		}
 	}
 
-	worker.input <- req
-	resp := <-worker.output
-
-	s.cleanup(worker, req)
-
-	return &resp, nil
+	return resp, nil
 }
 
-func (s *Server) Cancel(ctx context.Context, req *StatusRequest) (*StatusResponse, error) {
+func (s *Server) Cancel(ctx context.Context, req *Id) (*Job, error) {
 	log.WithFields(log.Fields{
 		"request": req,
 	}).Debug("Cancel request")
@@ -105,28 +112,30 @@ func (s *Server) Cancel(ctx context.Context, req *StatusRequest) (*StatusRespons
 	return &resp, nil
 }
 
-func (s *Server) scan(req *StartRequest, id string, worker *Worker) {
-	go func(req *StartRequest, id string, worker *Worker) {
+func (s *Server) scan(req *Options, id string, worker *Worker) {
+	go func(req *Options, id string, worker *Worker) {
 		defer worker.cancel()
 
-		resp := StatusResponse{
-			Id:           id,
-			StartRequest: req,
-			State:        StatusResponse_STARTED,
-			Started:      time.Now().UTC().Unix(),
+		resp := Job{
+			Id:      id,
+			Options: req,
+			State:   State_STARTED,
+			Progress: &Progress{
+				Started: time.Now().UTC().Unix(),
+			},
 		}
 
-		sync := make(chan StatusResponse)
+		sync := make(chan Job)
 
-		go func(worker *Worker, sync chan StatusResponse, resp StatusResponse) {
+		go func(worker *Worker, sync chan Job, resp Job) {
 			for {
 				select {
 				case resp = <-sync:
 				case <-worker.input:
-					if resp.Completed != 0 {
-						resp.Duration = resp.Completed - resp.Started
+					if resp.Progress.Completed != 0 {
+						resp.Progress.Duration = resp.Progress.Completed - resp.Progress.Started
 					} else {
-						resp.Duration = time.Now().UTC().Unix() - resp.Started
+						resp.Progress.Duration = time.Now().UTC().Unix() - resp.Progress.Started
 					}
 					worker.output <- resp
 					select {
@@ -146,7 +155,7 @@ func (s *Server) scan(req *StartRequest, id string, worker *Worker) {
 	}(req, id, worker)
 }
 
-func (s *Server) findWorker(req *StatusRequest) (*Worker, error) {
+func (s *Server) findWorker(req *Id) (*Worker, error) {
 	worker, ok := s.workers[req.Id]
 	if !ok {
 		err := grpc.Errorf(codes.NotFound, "worker not found")
@@ -159,7 +168,7 @@ func (s *Server) findWorker(req *StatusRequest) (*Worker, error) {
 	return worker, nil
 }
 
-func (s *Server) cleanup(worker *Worker, req *StatusRequest) {
+func (s *Server) cleanup(worker *Worker, req *Id) {
 	select {
 	case <-worker.ctx.Done():
 		delete(s.workers, req.Id)

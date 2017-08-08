@@ -3,9 +3,9 @@ package cmd
 import (
 	"context"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/resin-io/adapter-base/scan"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,12 +21,9 @@ var StartScanCmd = &cobra.Command{
 }
 
 var StatusScanCmd = &cobra.Command{
-	Use:   "status [id]",
-	Short: "Get the status of a scan",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return validateArgs(args, 1)
-	},
-	Run: statusScanCmd,
+	Use:   "status",
+	Short: "Get scan status",
+	Run:   statusScanCmd,
 }
 
 var CancelScanCmd = &cobra.Command{
@@ -44,9 +41,12 @@ func init() {
 	ScanCmd.AddCommand(CancelScanCmd)
 
 	ScanCmd.PersistentFlags().IntVarP(&port, "port", "p", 8081, "API port")
+	StartScanCmd.Flags().Int64VarP(&number, "number", "n", 0, "number of scans to run (default ∞)")
+	StartScanCmd.Flags().Int64VarP(&delay, "delay", "d", 0, "millisecond pause between scans (default 0)")
 	StartScanCmd.Flags().StringVarP(&application, "application", "a", "", "application")
 	StartScanCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address")
-	StartScanCmd.Flags().Int64VarP(&timeout, "timeout", "t", 120, "timeout")
+	StartScanCmd.Flags().Int64VarP(&timeout, "timeout", "t", 120000, "millisecond timeout")
+	StatusScanCmd.Flags().StringVarP(&id, "id", "i", "", "job id")
 }
 
 func startScanCmd(cmd *cobra.Command, args []string) {
@@ -56,17 +56,32 @@ func startScanCmd(cmd *cobra.Command, args []string) {
 	}
 	defer conn.Close()
 
+	options := &scan.Options{
+		Number: number,
+		Delay:  delay,
+		Extra:  make(map[string]*structpb.Value),
+	}
+	options.Extra["application"] = &structpb.Value{
+		Kind: &structpb.Value_StringValue{StringValue: application},
+	}
+	options.Extra["mac"] = &structpb.Value{
+		Kind: &structpb.Value_StringValue{StringValue: mac},
+	}
+	options.Extra["timeout"] = &structpb.Value{
+		Kind: &structpb.Value_NumberValue{NumberValue: float64(timeout)},
+	}
+
 	client := scan.NewScanClient(conn)
-	resp, err := client.Start(context.Background(), &scan.StartRequest{Application: application, Mac: mac, Timeout: timeout})
+	resp, err := client.Start(context.Background(), options)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to start scan")
+		}).Fatal("Failed to start job")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Scan status")
+	}).Info("Job status")
 }
 
 func statusScanCmd(cmd *cobra.Command, args []string) {
@@ -77,16 +92,16 @@ func statusScanCmd(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 
 	client := scan.NewScanClient(conn)
-	resp, err := client.Status(context.Background(), &scan.StatusRequest{Id: args[0]})
+	resp, err := client.Status(context.Background(), &scan.Id{Id: id})
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to get scan status")
+		}).Fatal("Failed to get job status")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Scan status")
+	}).Info("Job status")
 }
 
 func cancelScanCmd(cmd *cobra.Command, args []string) {
@@ -97,14 +112,14 @@ func cancelScanCmd(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 
 	client := scan.NewScanClient(conn)
-	resp, err := client.Cancel(context.Background(), &scan.StatusRequest{Id: args[0]})
+	resp, err := client.Cancel(context.Background(), &scan.Id{Id: args[0]})
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to cancel scan")
+		}).Fatal("Failed to cancel job")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Scan status")
+	}).Info("Job status")
 }

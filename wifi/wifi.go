@@ -5,17 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os/exec"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/lair-framework/go-nmap"
 	"github.com/parnurzeal/gorequest"
-)
-
-// TODO: these should be configurable
-const (
-	GATEWAY_IP = "10.0.40.73"
-	SCAN_RANGE = "10.0.40.*"
+	log "github.com/sirupsen/logrus"
 )
 
 type Host struct {
@@ -40,11 +33,11 @@ func PostForm(url, filePath string) error {
 }
 
 func Scan(ctx context.Context) ([]Host, error) {
-	cmd := exec.CommandContext(ctx, "bash", "-c", fmt.Sprintf("nmap -sP %s -oX /tmp/scan.txt", SCAN_RANGE))
+	// cmd := exec.CommandContext(ctx, "bash", "-c", fmt.Sprintf("nmap -sP %s -oX /tmp/scan.txt", SCAN_RANGE))
 
-	if err := cmd.Run(); err != nil {
-		return nil, err
-	}
+	// if err := cmd.Run(); err != nil {
+	// 	return nil, err
+	// }
 
 	file, err := ioutil.ReadFile("/tmp/scan.txt")
 	if err != nil {
@@ -66,11 +59,6 @@ func Scan(ctx context.Context) ([]Host, error) {
 			} else {
 				h.Ip = address.Addr
 			}
-		}
-
-		// Ignore the gateway device
-		if h.Ip == GATEWAY_IP {
-			continue
 		}
 
 		url := "http://" + h.Ip + "/id"

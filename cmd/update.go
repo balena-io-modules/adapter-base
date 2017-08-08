@@ -3,9 +3,9 @@ package cmd
 import (
 	"context"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/resin-io/adapter-base/update"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
@@ -15,21 +15,24 @@ var UpdateCmd = &cobra.Command{
 }
 
 var StartUpdateCmd = &cobra.Command{
-	Use:   "start [address] [payload]",
+	Use:   "start [image]",
 	Short: "Start an update",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return validateArgs(args, 2)
+		if err := validateArgs(args, 1); err != nil {
+			return err
+		} else if err := validateFlags(cmd.Flags()); err != nil {
+			return err
+		} else {
+			return nil
+		}
 	},
 	Run: startUpdateCmd,
 }
 
 var StatusUpdateCmd = &cobra.Command{
-	Use:   "status [id]",
-	Short: "Get the status of an update",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return validateArgs(args, 1)
-	},
-	Run: statusUpdateCmd,
+	Use:   "status",
+	Short: "Get update status",
+	Run:   statusUpdateCmd,
 }
 
 var CancelUpdateCmd = &cobra.Command{
@@ -47,7 +50,10 @@ func init() {
 	UpdateCmd.AddCommand(CancelUpdateCmd)
 
 	UpdateCmd.PersistentFlags().IntVarP(&port, "port", "p", 8081, "API port")
-	StartUpdateCmd.Flags().Int64VarP(&timeout, "timeout", "t", 120, "timeout")
+	StartUpdateCmd.Flags().StringArrayVarP(&destinations, "destinations", "d", nil, "update destinations")
+	StartUpdateCmd.MarkFlagRequired("destinations")
+	StartUpdateCmd.Flags().Int64VarP(&timeout, "timeout", "t", 120000, "millisecond timeout")
+	StatusUpdateCmd.Flags().StringVarP(&id, "id", "i", "", "job id")
 }
 
 func startUpdateCmd(cmd *cobra.Command, args []string) {
@@ -57,17 +63,31 @@ func startUpdateCmd(cmd *cobra.Command, args []string) {
 	}
 	defer conn.Close()
 
+	options := &update.Options{
+		Image: args[0],
+		Extra: make(map[string]*structpb.Value),
+	}
+	for _, entry := range destinations {
+		destination := &update.Destination{
+			Id: entry,
+		}
+		options.Destinations = append(options.Destinations, destination)
+	}
+	options.Extra["timeout"] = &structpb.Value{
+		Kind: &structpb.Value_NumberValue{NumberValue: float64(timeout)},
+	}
+
 	client := update.NewUpdateClient(conn)
-	resp, err := client.Start(context.Background(), &update.StartRequest{Address: args[0], Payload: args[1], Timeout: timeout})
+	resp, err := client.Start(context.Background(), options)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to start update")
+		}).Fatal("Failed to start job")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Update status")
+	}).Info("Job status")
 }
 
 func statusUpdateCmd(cmd *cobra.Command, args []string) {
@@ -78,16 +98,16 @@ func statusUpdateCmd(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 
 	client := update.NewUpdateClient(conn)
-	resp, err := client.Status(context.Background(), &update.StatusRequest{Id: args[0]})
+	resp, err := client.Status(context.Background(), &update.Id{Id: id})
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to get update status")
+		}).Fatal("Failed to get job status")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Update status")
+	}).Info("Job status")
 }
 
 func cancelUpdateCmd(cmd *cobra.Command, args []string) {
@@ -98,14 +118,14 @@ func cancelUpdateCmd(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 
 	client := update.NewUpdateClient(conn)
-	resp, err := client.Cancel(context.Background(), &update.StatusRequest{Id: args[0]})
+	resp, err := client.Cancel(context.Background(), &update.Id{Id: args[0]})
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("Failed to cancel update")
+		}).Fatal("Failed to cancel job")
 	}
 
 	log.WithFields(log.Fields{
 		"response": resp,
-	}).Info("Update status")
+	}).Info("Job status")
 }

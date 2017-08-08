@@ -8,10 +8,12 @@ It is generated from these files:
 	update.proto
 
 It has these top-level messages:
-	StartRequest
-	StartResponse
-	StatusRequest
-	StatusResponse
+	Options
+	Id
+	Destination
+	Progress
+	Job
+	Jobs
 */
 package update
 
@@ -19,6 +21,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import google_protobuf1 "github.com/golang/protobuf/ptypes/struct"
 
 import (
 	context "golang.org/x/net/context"
@@ -36,18 +39,18 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type StatusResponse_State int32
+type State int32
 
 const (
-	StatusResponse__         StatusResponse_State = 0
-	StatusResponse_STARTED   StatusResponse_State = 1
-	StatusResponse_COMPLETED StatusResponse_State = 2
-	StatusResponse_CANCELLED StatusResponse_State = 3
-	StatusResponse_FAILED    StatusResponse_State = 4
-	StatusResponse_TIMED_OUT StatusResponse_State = 5
+	State__         State = 0
+	State_STARTED   State = 1
+	State_COMPLETED State = 2
+	State_CANCELLED State = 3
+	State_FAILED    State = 4
+	State_TIMED_OUT State = 5
 )
 
-var StatusResponse_State_name = map[int32]string{
+var State_name = map[int32]string{
 	0: "_",
 	1: "STARTED",
 	2: "COMPLETED",
@@ -55,7 +58,7 @@ var StatusResponse_State_name = map[int32]string{
 	4: "FAILED",
 	5: "TIMED_OUT",
 }
-var StatusResponse_State_value = map[string]int32{
+var State_value = map[string]int32{
 	"_":         0,
 	"STARTED":   1,
 	"COMPLETED": 2,
@@ -64,153 +67,195 @@ var StatusResponse_State_value = map[string]int32{
 	"TIMED_OUT": 5,
 }
 
-func (x StatusResponse_State) String() string {
-	return proto.EnumName(StatusResponse_State_name, int32(x))
+func (x State) String() string {
+	return proto.EnumName(State_name, int32(x))
 }
-func (StatusResponse_State) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
+func (State) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-type StartRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
-	Payload string `protobuf:"bytes,2,opt,name=payload" json:"payload,omitempty"`
-	Timeout int64  `protobuf:"varint,3,opt,name=timeout" json:"timeout,omitempty"`
+type Options struct {
+	Image        string                             `protobuf:"bytes,1,opt,name=image" json:"image,omitempty"`
+	Destinations []*Destination                     `protobuf:"bytes,2,rep,name=destinations" json:"destinations,omitempty"`
+	Extra        map[string]*google_protobuf1.Value `protobuf:"bytes,3,rep,name=extra" json:"extra,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *StartRequest) Reset()                    { *m = StartRequest{} }
-func (m *StartRequest) String() string            { return proto.CompactTextString(m) }
-func (*StartRequest) ProtoMessage()               {}
-func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *Options) Reset()                    { *m = Options{} }
+func (m *Options) String() string            { return proto.CompactTextString(m) }
+func (*Options) ProtoMessage()               {}
+func (*Options) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *StartRequest) GetAddress() string {
+func (m *Options) GetImage() string {
 	if m != nil {
-		return m.Address
+		return m.Image
 	}
 	return ""
 }
 
-func (m *StartRequest) GetPayload() string {
+func (m *Options) GetDestinations() []*Destination {
 	if m != nil {
-		return m.Payload
-	}
-	return ""
-}
-
-func (m *StartRequest) GetTimeout() int64 {
-	if m != nil {
-		return m.Timeout
-	}
-	return 0
-}
-
-type StartResponse struct {
-	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-}
-
-func (m *StartResponse) Reset()                    { *m = StartResponse{} }
-func (m *StartResponse) String() string            { return proto.CompactTextString(m) }
-func (*StartResponse) ProtoMessage()               {}
-func (*StartResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *StartResponse) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-type StatusRequest struct {
-	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-}
-
-func (m *StatusRequest) Reset()                    { *m = StatusRequest{} }
-func (m *StatusRequest) String() string            { return proto.CompactTextString(m) }
-func (*StatusRequest) ProtoMessage()               {}
-func (*StatusRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *StatusRequest) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-type StatusResponse struct {
-	Id           string               `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-	StartRequest *StartRequest        `protobuf:"bytes,2,opt,name=startRequest" json:"startRequest,omitempty"`
-	State        StatusResponse_State `protobuf:"varint,3,opt,name=state,enum=update.StatusResponse_State" json:"state,omitempty"`
-	Progress     int32                `protobuf:"varint,4,opt,name=progress" json:"progress,omitempty"`
-	Message      string               `protobuf:"bytes,5,opt,name=message" json:"message,omitempty"`
-	Started      int64                `protobuf:"varint,6,opt,name=started" json:"started,omitempty"`
-	Completed    int64                `protobuf:"varint,7,opt,name=completed" json:"completed,omitempty"`
-	Duration     int64                `protobuf:"varint,8,opt,name=duration" json:"duration,omitempty"`
-}
-
-func (m *StatusResponse) Reset()                    { *m = StatusResponse{} }
-func (m *StatusResponse) String() string            { return proto.CompactTextString(m) }
-func (*StatusResponse) ProtoMessage()               {}
-func (*StatusResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *StatusResponse) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *StatusResponse) GetStartRequest() *StartRequest {
-	if m != nil {
-		return m.StartRequest
+		return m.Destinations
 	}
 	return nil
 }
 
-func (m *StatusResponse) GetState() StatusResponse_State {
+func (m *Options) GetExtra() map[string]*google_protobuf1.Value {
 	if m != nil {
-		return m.State
+		return m.Extra
 	}
-	return StatusResponse__
+	return nil
 }
 
-func (m *StatusResponse) GetProgress() int32 {
-	if m != nil {
-		return m.Progress
-	}
-	return 0
+type Id struct {
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 }
 
-func (m *StatusResponse) GetMessage() string {
+func (m *Id) Reset()                    { *m = Id{} }
+func (m *Id) String() string            { return proto.CompactTextString(m) }
+func (*Id) ProtoMessage()               {}
+func (*Id) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *Id) GetId() string {
 	if m != nil {
-		return m.Message
+		return m.Id
 	}
 	return ""
 }
 
-func (m *StatusResponse) GetStarted() int64 {
+type Destination struct {
+	Id    string                             `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Extra map[string]*google_protobuf1.Value `protobuf:"bytes,2,rep,name=extra" json:"extra,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *Destination) Reset()                    { *m = Destination{} }
+func (m *Destination) String() string            { return proto.CompactTextString(m) }
+func (*Destination) ProtoMessage()               {}
+func (*Destination) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *Destination) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *Destination) GetExtra() map[string]*google_protobuf1.Value {
+	if m != nil {
+		return m.Extra
+	}
+	return nil
+}
+
+type Progress struct {
+	Started   int64 `protobuf:"varint,1,opt,name=started" json:"started,omitempty"`
+	Completed int64 `protobuf:"varint,2,opt,name=completed" json:"completed,omitempty"`
+	Duration  int64 `protobuf:"varint,3,opt,name=duration" json:"duration,omitempty"`
+}
+
+func (m *Progress) Reset()                    { *m = Progress{} }
+func (m *Progress) String() string            { return proto.CompactTextString(m) }
+func (*Progress) ProtoMessage()               {}
+func (*Progress) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *Progress) GetStarted() int64 {
 	if m != nil {
 		return m.Started
 	}
 	return 0
 }
 
-func (m *StatusResponse) GetCompleted() int64 {
+func (m *Progress) GetCompleted() int64 {
 	if m != nil {
 		return m.Completed
 	}
 	return 0
 }
 
-func (m *StatusResponse) GetDuration() int64 {
+func (m *Progress) GetDuration() int64 {
 	if m != nil {
 		return m.Duration
 	}
 	return 0
 }
 
+type Job struct {
+	Id           string         `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Options      *Options       `protobuf:"bytes,2,opt,name=options" json:"options,omitempty"`
+	State        State          `protobuf:"varint,3,opt,name=state,enum=update.State" json:"state,omitempty"`
+	Destinations []*Destination `protobuf:"bytes,4,rep,name=destinations" json:"destinations,omitempty"`
+	Progress     *Progress      `protobuf:"bytes,5,opt,name=progress" json:"progress,omitempty"`
+	Message      string         `protobuf:"bytes,6,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *Job) Reset()                    { *m = Job{} }
+func (m *Job) String() string            { return proto.CompactTextString(m) }
+func (*Job) ProtoMessage()               {}
+func (*Job) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *Job) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *Job) GetOptions() *Options {
+	if m != nil {
+		return m.Options
+	}
+	return nil
+}
+
+func (m *Job) GetState() State {
+	if m != nil {
+		return m.State
+	}
+	return State__
+}
+
+func (m *Job) GetDestinations() []*Destination {
+	if m != nil {
+		return m.Destinations
+	}
+	return nil
+}
+
+func (m *Job) GetProgress() *Progress {
+	if m != nil {
+		return m.Progress
+	}
+	return nil
+}
+
+func (m *Job) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type Jobs struct {
+	Jobs []*Job `protobuf:"bytes,1,rep,name=jobs" json:"jobs,omitempty"`
+}
+
+func (m *Jobs) Reset()                    { *m = Jobs{} }
+func (m *Jobs) String() string            { return proto.CompactTextString(m) }
+func (*Jobs) ProtoMessage()               {}
+func (*Jobs) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *Jobs) GetJobs() []*Job {
+	if m != nil {
+		return m.Jobs
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterType((*StartRequest)(nil), "update.StartRequest")
-	proto.RegisterType((*StartResponse)(nil), "update.StartResponse")
-	proto.RegisterType((*StatusRequest)(nil), "update.StatusRequest")
-	proto.RegisterType((*StatusResponse)(nil), "update.StatusResponse")
-	proto.RegisterEnum("update.StatusResponse_State", StatusResponse_State_name, StatusResponse_State_value)
+	proto.RegisterType((*Options)(nil), "update.Options")
+	proto.RegisterType((*Id)(nil), "update.Id")
+	proto.RegisterType((*Destination)(nil), "update.Destination")
+	proto.RegisterType((*Progress)(nil), "update.Progress")
+	proto.RegisterType((*Job)(nil), "update.Job")
+	proto.RegisterType((*Jobs)(nil), "update.Jobs")
+	proto.RegisterEnum("update.State", State_name, State_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -224,9 +269,9 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Update service
 
 type UpdateClient interface {
-	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error)
-	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	Cancel(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	Start(ctx context.Context, in *Options, opts ...grpc.CallOption) (*Id, error)
+	Status(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Jobs, error)
+	Cancel(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Job, error)
 }
 
 type updateClient struct {
@@ -237,8 +282,8 @@ func NewUpdateClient(cc *grpc.ClientConn) UpdateClient {
 	return &updateClient{cc}
 }
 
-func (c *updateClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
-	out := new(StartResponse)
+func (c *updateClient) Start(ctx context.Context, in *Options, opts ...grpc.CallOption) (*Id, error) {
+	out := new(Id)
 	err := grpc.Invoke(ctx, "/update.Update/Start", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -246,8 +291,8 @@ func (c *updateClient) Start(ctx context.Context, in *StartRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *updateClient) Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *updateClient) Status(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Jobs, error) {
+	out := new(Jobs)
 	err := grpc.Invoke(ctx, "/update.Update/Status", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -255,8 +300,8 @@ func (c *updateClient) Status(ctx context.Context, in *StatusRequest, opts ...gr
 	return out, nil
 }
 
-func (c *updateClient) Cancel(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *updateClient) Cancel(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Job, error) {
+	out := new(Job)
 	err := grpc.Invoke(ctx, "/update.Update/Cancel", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -267,9 +312,9 @@ func (c *updateClient) Cancel(ctx context.Context, in *StatusRequest, opts ...gr
 // Server API for Update service
 
 type UpdateServer interface {
-	Start(context.Context, *StartRequest) (*StartResponse, error)
-	Status(context.Context, *StatusRequest) (*StatusResponse, error)
-	Cancel(context.Context, *StatusRequest) (*StatusResponse, error)
+	Start(context.Context, *Options) (*Id, error)
+	Status(context.Context, *Id) (*Jobs, error)
+	Cancel(context.Context, *Id) (*Job, error)
 }
 
 func RegisterUpdateServer(s *grpc.Server, srv UpdateServer) {
@@ -277,7 +322,7 @@ func RegisterUpdateServer(s *grpc.Server, srv UpdateServer) {
 }
 
 func _Update_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StartRequest)
+	in := new(Options)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -289,13 +334,13 @@ func _Update_Start_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/update.Update/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UpdateServer).Start(ctx, req.(*StartRequest))
+		return srv.(UpdateServer).Start(ctx, req.(*Options))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Update_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StatusRequest)
+	in := new(Id)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -307,13 +352,13 @@ func _Update_Status_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/update.Update/Status",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UpdateServer).Status(ctx, req.(*StatusRequest))
+		return srv.(UpdateServer).Status(ctx, req.(*Id))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Update_Cancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StatusRequest)
+	in := new(Id)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -325,7 +370,7 @@ func _Update_Cancel_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/update.Update/Cancel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UpdateServer).Cancel(ctx, req.(*StatusRequest))
+		return srv.(UpdateServer).Cancel(ctx, req.(*Id))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -354,33 +399,41 @@ var _Update_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("update.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 439 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0xcd, 0x6a, 0xdb, 0x40,
-	0x14, 0x85, 0x3b, 0x72, 0x24, 0xc7, 0x37, 0x8a, 0x31, 0x97, 0xa4, 0x08, 0x63, 0xa8, 0xd1, 0xca,
-	0x64, 0x11, 0x83, 0xbb, 0x29, 0xdd, 0x19, 0x5b, 0xa5, 0x01, 0xbb, 0x29, 0x8a, 0xb2, 0x2b, 0x84,
-	0x69, 0x66, 0x30, 0x02, 0x5b, 0xa3, 0x6a, 0x46, 0x8b, 0x52, 0xba, 0xe9, 0x2b, 0xf4, 0xd1, 0xfa,
-	0x0a, 0x5d, 0x97, 0x3e, 0x42, 0x99, 0x1f, 0xa5, 0xb2, 0xf1, 0x2a, 0x3b, 0x9d, 0x39, 0x47, 0xe7,
-	0xde, 0xf9, 0x84, 0x20, 0xac, 0x4b, 0x46, 0x15, 0xbf, 0x2e, 0x2b, 0xa1, 0x04, 0x06, 0x56, 0x0d,
-	0x47, 0x1b, 0x21, 0x36, 0x5b, 0x3e, 0xa5, 0x65, 0x3e, 0xa5, 0x45, 0x21, 0x14, 0x55, 0xb9, 0x28,
-	0xa4, 0x4d, 0xc5, 0x9f, 0x20, 0xbc, 0x53, 0xb4, 0x52, 0x29, 0xff, 0x52, 0x73, 0xa9, 0x30, 0x82,
-	0x2e, 0x65, 0xac, 0xe2, 0x52, 0x46, 0x64, 0x4c, 0x26, 0xbd, 0xb4, 0x91, 0xda, 0x29, 0xe9, 0xd7,
-	0xad, 0xa0, 0x2c, 0xf2, 0xac, 0xe3, 0xa4, 0x76, 0x54, 0xbe, 0xe3, 0xa2, 0x56, 0x51, 0x67, 0x4c,
-	0x26, 0x9d, 0xb4, 0x91, 0xf1, 0x2b, 0x38, 0x77, 0xed, 0xb2, 0x14, 0x85, 0xe4, 0xd8, 0x07, 0x2f,
-	0x67, 0xae, 0xd9, 0xcb, 0x99, 0x0b, 0xa8, 0x5a, 0x36, 0xf3, 0x0f, 0x03, 0x7f, 0x3c, 0xe8, 0x37,
-	0x89, 0xe3, 0x1d, 0xf8, 0x06, 0x42, 0xd9, 0xba, 0x82, 0xd9, 0xee, 0x6c, 0x76, 0x71, 0xed, 0x68,
-	0xb4, 0xaf, 0x97, 0xee, 0x25, 0x71, 0x06, 0xbe, 0x54, 0x54, 0x71, 0xb3, 0x76, 0x7f, 0x36, 0x6a,
-	0xbd, 0xd2, 0x1a, 0x68, 0x24, 0x4f, 0x6d, 0x14, 0x87, 0x70, 0x5a, 0x56, 0x62, 0x63, 0x08, 0x9d,
-	0x8c, 0xc9, 0xc4, 0x4f, 0x9f, 0xb4, 0x06, 0xb1, 0xe3, 0x52, 0xd2, 0x0d, 0x8f, 0x7c, 0x8b, 0xc8,
-	0x49, 0xed, 0x98, 0xc9, 0x9c, 0x45, 0x81, 0x45, 0xe4, 0x24, 0x8e, 0xa0, 0xf7, 0x28, 0x76, 0xe5,
-	0x96, 0x6b, 0xaf, 0x6b, 0xbc, 0xff, 0x07, 0x7a, 0x1a, 0xab, 0x2b, 0xf3, 0xc5, 0xa2, 0x53, 0x63,
-	0x3e, 0xe9, 0x38, 0x03, 0xdf, 0x6c, 0x86, 0x3e, 0x90, 0x87, 0xc1, 0x0b, 0x3c, 0x83, 0xee, 0x5d,
-	0x36, 0x4f, 0xb3, 0x64, 0x39, 0x20, 0x78, 0x0e, 0xbd, 0xc5, 0xed, 0xfa, 0xe3, 0x2a, 0xd1, 0xd2,
-	0x33, 0x72, 0xfe, 0x61, 0x91, 0xac, 0x56, 0xc9, 0x72, 0xd0, 0x41, 0x80, 0xe0, 0xdd, 0xfc, 0x46,
-	0x3f, 0x9f, 0x68, 0x2b, 0xbb, 0x59, 0x27, 0xcb, 0x87, 0xdb, 0xfb, 0x6c, 0xe0, 0xcf, 0xfe, 0x12,
-	0x08, 0xee, 0x0d, 0x06, 0x7c, 0x6f, 0x06, 0x54, 0x0a, 0x8f, 0xb2, 0x1c, 0x5e, 0x1e, 0x9c, 0x5a,
-	0x5a, 0x31, 0xfe, 0xf8, 0xf5, 0xfb, 0xa7, 0x17, 0xc6, 0xdd, 0xa9, 0xb5, 0xdf, 0x92, 0x2b, 0x5c,
-	0x43, 0x60, 0x99, 0xe2, 0xe5, 0x21, 0x63, 0xdb, 0xf5, 0xf2, 0x38, 0xfa, 0xf8, 0xc2, 0x94, 0xf5,
-	0x31, 0x74, 0x65, 0xd3, 0x6f, 0x39, 0xfb, 0xae, 0xeb, 0x16, 0xb4, 0x78, 0xe4, 0xdb, 0x67, 0xd6,
-	0x5d, 0xed, 0xd5, 0x7d, 0x0e, 0xcc, 0xaf, 0xf0, 0xfa, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd2,
-	0xba, 0x60, 0x63, 0x40, 0x03, 0x00, 0x00,
+	// 566 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x52, 0xd1, 0x4e, 0xd4, 0x4c,
+	0x18, 0xfd, 0xa7, 0xdd, 0x76, 0xe1, 0xdb, 0x85, 0xbf, 0xf9, 0x24, 0xa6, 0x69, 0x88, 0x92, 0x7a,
+	0x21, 0x12, 0xd2, 0x35, 0xab, 0x09, 0x84, 0x3b, 0xc2, 0xd6, 0x64, 0x09, 0x08, 0x29, 0x8b, 0x97,
+	0x92, 0x96, 0x8e, 0x9b, 0xea, 0xd2, 0x69, 0x3a, 0x53, 0x23, 0x31, 0xde, 0xf8, 0x0a, 0x3e, 0x83,
+	0x8f, 0xe0, 0x93, 0x78, 0xeb, 0xa5, 0xf1, 0x39, 0xcc, 0xcc, 0x74, 0x60, 0x01, 0x2f, 0xbc, 0xf2,
+	0xae, 0xe7, 0x3b, 0xe7, 0xcc, 0x9c, 0x33, 0xfd, 0xa0, 0xdf, 0x54, 0x79, 0x2a, 0x68, 0x54, 0xd5,
+	0x4c, 0x30, 0x74, 0x35, 0x0a, 0x56, 0xa7, 0x8c, 0x4d, 0x67, 0x74, 0x90, 0x56, 0xc5, 0x20, 0x2d,
+	0x4b, 0x26, 0x52, 0x51, 0xb0, 0x92, 0x6b, 0xd5, 0x15, 0xab, 0x50, 0xd6, 0xbc, 0x19, 0x70, 0x51,
+	0x37, 0xe7, 0x42, 0xb3, 0xe1, 0x0f, 0x02, 0xdd, 0xa3, 0x4a, 0xe9, 0x71, 0x05, 0x9c, 0xe2, 0x22,
+	0x9d, 0x52, 0x9f, 0xac, 0x91, 0xf5, 0xc5, 0x44, 0x03, 0xdc, 0x82, 0x7e, 0x4e, 0xb9, 0x28, 0x4a,
+	0x7d, 0xaa, 0x6f, 0xad, 0xd9, 0xeb, 0xbd, 0xe1, 0xbd, 0xa8, 0x8d, 0x32, 0xba, 0xe6, 0x92, 0x1b,
+	0x42, 0x7c, 0x0a, 0x0e, 0xfd, 0x20, 0xea, 0xd4, 0xb7, 0x95, 0x23, 0x30, 0x8e, 0xf6, 0xba, 0x28,
+	0x96, 0x64, 0x5c, 0x8a, 0xfa, 0x32, 0xd1, 0xc2, 0xe0, 0x18, 0xe0, 0x7a, 0x88, 0x1e, 0xd8, 0xef,
+	0xe8, 0x65, 0x1b, 0x46, 0x7e, 0xe2, 0x26, 0x38, 0xef, 0xd3, 0x59, 0x43, 0x7d, 0x6b, 0x8d, 0xac,
+	0xf7, 0x86, 0xf7, 0x23, 0x5d, 0x2d, 0x32, 0xd5, 0xa2, 0x57, 0x92, 0x4d, 0xb4, 0x68, 0xc7, 0xda,
+	0x26, 0xe1, 0x0a, 0x58, 0xe3, 0x1c, 0x97, 0xc1, 0x2a, 0xf2, 0xf6, 0x20, 0xab, 0xc8, 0xc3, 0xaf,
+	0x04, 0x7a, 0x73, 0xb9, 0x6f, 0xf3, 0xf8, 0xdc, 0x24, 0xd7, 0x5d, 0x1f, 0xfc, 0xa1, 0xeb, 0x3f,
+	0x49, 0xff, 0x1a, 0x16, 0x8e, 0x6b, 0x36, 0xad, 0x29, 0xe7, 0xe8, 0x43, 0x97, 0x8b, 0xb4, 0x16,
+	0x54, 0x07, 0xb5, 0x13, 0x03, 0x71, 0x15, 0x16, 0xcf, 0xd9, 0x45, 0x35, 0xa3, 0x92, 0xb3, 0x14,
+	0x77, 0x3d, 0xc0, 0x00, 0x16, 0xf2, 0xa6, 0x56, 0x99, 0x7d, 0x5b, 0x91, 0x57, 0x38, 0xfc, 0x45,
+	0xc0, 0xde, 0x67, 0xd9, 0x9d, 0xfe, 0x4f, 0xa0, 0xcb, 0x2a, 0xf3, 0xb7, 0x65, 0xd6, 0xff, 0x6f,
+	0xfd, 0xbb, 0xc4, 0xf0, 0xf8, 0x08, 0x1c, 0x2e, 0x52, 0x41, 0xd5, 0xd9, 0xcb, 0xc3, 0x25, 0x23,
+	0x3c, 0x91, 0xc3, 0x44, 0x73, 0x77, 0x56, 0xa8, 0xf3, 0xb7, 0x2b, 0xb4, 0x09, 0x0b, 0x55, 0xfb,
+	0x00, 0xbe, 0xa3, 0x92, 0x78, 0xc6, 0x64, 0x1e, 0x26, 0xb9, 0x52, 0xc8, 0x27, 0xba, 0xa0, 0x9c,
+	0xcb, 0x0d, 0x76, 0x55, 0x17, 0x03, 0xc3, 0xc7, 0xd0, 0xd9, 0x67, 0x19, 0xc7, 0x87, 0xd0, 0x79,
+	0xcb, 0x32, 0xee, 0x13, 0x15, 0xa0, 0x67, 0xce, 0xda, 0x67, 0x59, 0xa2, 0x88, 0x8d, 0x09, 0x38,
+	0x2a, 0x39, 0x3a, 0x40, 0xce, 0xbc, 0xff, 0xb0, 0x07, 0xdd, 0x93, 0xc9, 0x6e, 0x32, 0x89, 0x47,
+	0x1e, 0xc1, 0x25, 0x58, 0xdc, 0x3b, 0x3a, 0x3c, 0x3e, 0x88, 0x25, 0xb4, 0x14, 0xdc, 0x7d, 0xb9,
+	0x17, 0x1f, 0x1c, 0xc4, 0x23, 0xcf, 0x46, 0x00, 0xf7, 0xc5, 0xee, 0x58, 0x7e, 0x77, 0x24, 0x35,
+	0x19, 0x1f, 0xc6, 0xa3, 0xb3, 0xa3, 0xd3, 0x89, 0xe7, 0x0c, 0xbf, 0x11, 0x70, 0x4f, 0xd5, 0x55,
+	0xb8, 0xad, 0x2e, 0xa8, 0x05, 0xde, 0x7e, 0xd2, 0x00, 0xcc, 0x60, 0x9c, 0x87, 0xf8, 0xf9, 0xfb,
+	0xcf, 0x2f, 0x56, 0x3f, 0xec, 0x0e, 0xf4, 0x6c, 0x87, 0x6c, 0xe0, 0x36, 0xb8, 0x32, 0x5a, 0xc3,
+	0x71, 0x4e, 0x19, 0xf4, 0xe7, 0x3a, 0xf0, 0x70, 0x45, 0xf9, 0x96, 0xb1, 0xdf, 0xfa, 0x06, 0x1f,
+	0x8b, 0xfc, 0x13, 0x6e, 0x81, 0xbb, 0x97, 0x96, 0xe7, 0x74, 0x76, 0xc3, 0x39, 0xdf, 0xde, 0x18,
+	0x37, 0x6e, 0x18, 0x33, 0x57, 0xad, 0xe6, 0xb3, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x99, 0x7f,
+	0xdb, 0x10, 0x77, 0x04, 0x00, 0x00,
 }
