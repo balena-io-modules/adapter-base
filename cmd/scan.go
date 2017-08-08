@@ -4,7 +4,7 @@ import (
 	"context"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/resin-io/adapter-base/scan"
+	"github.com/resin-io/adapter-base/adapter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ var StartScanCmd = &cobra.Command{
 var StatusScanCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get scan status",
-	Run:   statusScanCmd,
+	Run:   statusCmd,
 }
 
 var CancelScanCmd = &cobra.Command{
@@ -32,7 +32,7 @@ var CancelScanCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return validateArgs(args, 1)
 	},
-	Run: cancelScanCmd,
+	Run: cancelCmd,
 }
 
 func init() {
@@ -56,7 +56,7 @@ func startScanCmd(cmd *cobra.Command, args []string) {
 	}
 	defer conn.Close()
 
-	options := &scan.Options{
+	options := &adapter.ScanOptions{
 		Number: number,
 		Delay:  delay,
 		Extra:  make(map[string]*structpb.Value),
@@ -71,52 +71,12 @@ func startScanCmd(cmd *cobra.Command, args []string) {
 		Kind: &structpb.Value_NumberValue{NumberValue: float64(timeout)},
 	}
 
-	client := scan.NewScanClient(conn)
-	resp, err := client.Start(context.Background(), options)
+	client := adapter.NewScanClient(conn)
+	resp, err := client.StartScan(context.Background(), options)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
 		}).Fatal("Failed to start job")
-	}
-
-	log.WithFields(log.Fields{
-		"response": resp,
-	}).Info("Job status")
-}
-
-func statusScanCmd(cmd *cobra.Command, args []string) {
-	conn, err := openConnection()
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	client := scan.NewScanClient(conn)
-	resp, err := client.Status(context.Background(), &scan.Id{Id: id})
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("Failed to get job status")
-	}
-
-	log.WithFields(log.Fields{
-		"response": resp,
-	}).Info("Job status")
-}
-
-func cancelScanCmd(cmd *cobra.Command, args []string) {
-	conn, err := openConnection()
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	client := scan.NewScanClient(conn)
-	resp, err := client.Cancel(context.Background(), &scan.Id{Id: args[0]})
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("Failed to cancel job")
 	}
 
 	log.WithFields(log.Fields{

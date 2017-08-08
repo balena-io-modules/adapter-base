@@ -4,7 +4,7 @@ import (
 	"context"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/resin-io/adapter-base/update"
+	"github.com/resin-io/adapter-base/adapter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ var StartUpdateCmd = &cobra.Command{
 var StatusUpdateCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get update status",
-	Run:   statusUpdateCmd,
+	Run:   statusCmd,
 }
 
 var CancelUpdateCmd = &cobra.Command{
@@ -41,7 +41,7 @@ var CancelUpdateCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return validateArgs(args, 1)
 	},
-	Run: cancelUpdateCmd,
+	Run: cancelCmd,
 }
 
 func init() {
@@ -63,12 +63,12 @@ func startUpdateCmd(cmd *cobra.Command, args []string) {
 	}
 	defer conn.Close()
 
-	options := &update.Options{
+	options := &adapter.UpdateOptions{
 		Image: args[0],
 		Extra: make(map[string]*structpb.Value),
 	}
 	for _, entry := range destinations {
-		destination := &update.Destination{
+		destination := &adapter.Destination{
 			Id: entry,
 		}
 		options.Destinations = append(options.Destinations, destination)
@@ -77,52 +77,12 @@ func startUpdateCmd(cmd *cobra.Command, args []string) {
 		Kind: &structpb.Value_NumberValue{NumberValue: float64(timeout)},
 	}
 
-	client := update.NewUpdateClient(conn)
-	resp, err := client.Start(context.Background(), options)
+	client := adapter.NewUpdateClient(conn)
+	resp, err := client.StartUpdate(context.Background(), options)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
 		}).Fatal("Failed to start job")
-	}
-
-	log.WithFields(log.Fields{
-		"response": resp,
-	}).Info("Job status")
-}
-
-func statusUpdateCmd(cmd *cobra.Command, args []string) {
-	conn, err := openConnection()
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	client := update.NewUpdateClient(conn)
-	resp, err := client.Status(context.Background(), &update.Id{Id: id})
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("Failed to get job status")
-	}
-
-	log.WithFields(log.Fields{
-		"response": resp,
-	}).Info("Job status")
-}
-
-func cancelUpdateCmd(cmd *cobra.Command, args []string) {
-	conn, err := openConnection()
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	client := update.NewUpdateClient(conn)
-	resp, err := client.Cancel(context.Background(), &update.Id{Id: args[0]})
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("Failed to cancel job")
 	}
 
 	log.WithFields(log.Fields{

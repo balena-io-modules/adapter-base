@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"sync"
 
-	"google.golang.org/grpc"
-
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/resin-io/adapter-base/scan"
-	"github.com/resin-io/adapter-base/update"
+	"github.com/resin-io/adapter-base/adapter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
 
 var ServerCmd = &cobra.Command{
@@ -34,11 +32,9 @@ func serverCmd(cmd *cobra.Command, args []string) {
 
 	rpcServer := grpc.NewServer()
 
-	updateServer := update.NewServer(concurrency, verbose)
-	update.RegisterUpdateServer(rpcServer, updateServer)
-
-	scanServer := scan.NewServer(concurrency, verbose)
-	scan.RegisterScanServer(rpcServer, scanServer)
+	server := adapter.CreateServer(concurrency, verbose)
+	adapter.RegisterScanServer(rpcServer, server)
+	adapter.RegisterUpdateServer(rpcServer, server)
 
 	rpcAddr := fmt.Sprintf("localhost:%v", rpcPort)
 	conn, err := net.Listen("tcp", rpcAddr)
@@ -60,10 +56,10 @@ func serverCmd(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	if err := update.RegisterUpdateHandlerFromEndpoint(ctx, mux, rpcAddr, opts); err != nil {
+	if err := adapter.RegisterUpdateHandlerFromEndpoint(ctx, mux, rpcAddr, opts); err != nil {
 		log.Fatal("Failed to register update handler")
 	}
-	if err := scan.RegisterScanHandlerFromEndpoint(ctx, mux, rpcAddr, opts); err != nil {
+	if err := adapter.RegisterScanHandlerFromEndpoint(ctx, mux, rpcAddr, opts); err != nil {
 		log.Fatal("Failed to register scan handler")
 	}
 
