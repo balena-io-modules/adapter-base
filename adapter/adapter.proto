@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package adapter;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Scan {
+  rpc StartScan (ScanKey) returns (Id) {
+    option (google.api.http) = {
+      post: "/scan"
+      body: "options"
+    };
+  }
+  rpc Status (Id) returns (Jobs) {
+    option (google.api.http) = {
+      get: "/scan/{id}"
+    };
+  }
+  rpc Cancel (Id) returns (Job) {
+    option (google.api.http) = {
+      delete: "/scan/{id}"
+    };
+  }
+}
+
+message ScanKey {
+  string adapter_api_key = 1;
+  ScanOptions options = 2;
+}
+
+message ScanOptions {
+  string mode = 1;
+  int64 number = 2;
+  int64 delay = 3;
+  map<string, google.protobuf.Value> extra = 4;
+}
+
+service Update {
+  rpc StartUpdate (UpdateKey) returns (Id) {
+    option (google.api.http) = {
+      post: "/update"
+      body: "options"
+    };
+  }
+  rpc Status (Id) returns (Jobs) {
+    option (google.api.http) = {
+      get: "/update/{id}"
+    };
+  }
+  rpc Cancel (Id) returns (Job) {
+    option (google.api.http) = {
+      delete: "/update/{id}"
+    };
+  }
+}
+
+message UpdateKey {
+  string adapter_api_key = 1;
+  UpdateOptions options = 2;
+}
+
+message UpdateOptions {
+  string mode = 1;
+  string image = 2;
+  repeated Destination destinations = 3;
+  map<string, google.protobuf.Value> extra = 4;
+}
+
+message Id {
+  string adapter_api_key = 1;
+  string id = 2;
+}
+
+enum State {
+  _ = 0;
+  STARTED = 1;
+  COMPLETED = 2;
+  FAILED = 3;
+  TIMED_OUT = 4;
+}
+
+message Destination {
+  string id = 1;
+  map<string, google.protobuf.Value> extra = 2;
+}
+
+message Progress {
+  int64 started = 1;
+  int64 completed = 2;
+  int64 duration = 3;
+  int64 percentage = 4;
+  int64 transferred = 5;
+  int64 length = 6;
+  int64 remaining = 7;
+  int64 eta = 8;
+  int64 runtime = 9;
+  int64 speed = 10;
+}
+
+message Job {
+  string id = 1;
+  State state = 2;
+  repeated Destination destinations = 3;
+  Progress progress = 4;
+  string message = 5;
+}
+
+message Jobs {
+  repeated Job jobs = 1;
+}
